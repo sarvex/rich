@@ -90,7 +90,7 @@ def test_simplify():
             [Segment("Hello", "red"), Segment(" ", "red"), Segment("World!", "blue")]
         )
     ) == [Segment("Hello ", "red"), Segment("World!", "blue")]
-    assert list(Segment.simplify([])) == []
+    assert not list(Segment.simplify([]))
 
 
 def test_filter_control():

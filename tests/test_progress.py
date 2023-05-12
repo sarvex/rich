@@ -179,8 +179,7 @@ def render_progress() -> str:
     with progress:
         pass
     progress.stop()  # superfluous noop
-    progress_render = progress.console.file.getvalue()
-    return progress_render
+    return progress.console.file.getvalue()
 
 
 def test_expand_bar() -> None:
@@ -245,7 +244,7 @@ def test_track() -> None:
     assert result == expected
 
     with pytest.raises(ValueError):
-        for n in track(5):
+        for _ in track(5):
             pass
 
 
@@ -278,7 +277,7 @@ def test_progress_track() -> None:
     assert result == expected
 
     with pytest.raises(ValueError):
-        for n in progress.track(5):
+        for _ in progress.track(5):
             pass
 
 
@@ -312,7 +311,7 @@ def test_columns() -> None:
     task1 = progress.add_task("foo", total=10)
     task2 = progress.add_task("bar", total=7)
     with progress:
-        for n in range(4):
+        for _ in range(4):
             progress.advance(task1, 3)
             progress.advance(task2, 4)
         print("foo")
@@ -415,7 +414,7 @@ def test_progress_max_refresh() -> None:
         try:
             return time
         finally:
-            time = time + 1.0
+            time += 1.0
 
     console = Console(
         color_system=None,

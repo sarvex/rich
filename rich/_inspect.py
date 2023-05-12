@@ -20,8 +20,7 @@ def _first_paragraph(doc: str) -> str:
 
 def _reformat_doc(doc: str) -> str:
     """Reformat docstring."""
-    doc = cleandoc(doc).strip()
-    return doc
+    return cleandoc(doc).strip()
 
 
 class Inspect(JupyterMixin):
@@ -74,8 +73,7 @@ class Inspect(JupyterMixin):
             if (isclass(obj) or callable(obj) or ismodule(obj))
             else str(type(obj))
         )
-        title_text = self.highlighter(title_str)
-        return title_text
+        return self.highlighter(title_str)
 
     def __rich__(self) -> Panel:
         return Panel.fit(
@@ -88,7 +86,7 @@ class Inspect(JupyterMixin):
     def _get_signature(self, name: str, obj: Any) -> Optional[Text]:
         """Get a signature for a callable."""
         try:
-            _signature = str(signature(obj)) + ":"
+            _signature = f"{str(signature(obj))}:"
         except ValueError:
             _signature = "(...)"
         except TypeError:
@@ -106,11 +104,9 @@ class Inspect(JupyterMixin):
         signature_text = self.highlighter(_signature)
 
         qualname = name or getattr(obj, "__qualname__", name)
-        qual_signature = Text.assemble(
+        return Text.assemble(
             ("def ", "inspect.def"), (qualname, "inspect.callable"), signature_text
         )
-
-        return qual_signature
 
     def _render(self) -> Iterable[RenderableType]:
         """Render object."""
@@ -154,11 +150,15 @@ class Inspect(JupyterMixin):
             if not self.help:
                 _doc = _first_paragraph(_doc)
             doc_text = Text(_reformat_doc(_doc), style="inspect.help")
-            doc_text = highlighter(doc_text)
-            yield doc_text
+            yield highlighter(doc_text)
             yield ""
 
-        if self.value and not (isclass(obj) or callable(obj) or ismodule(obj)):
+        if (
+            self.value
+            and not isclass(obj)
+            and not callable(obj)
+            and not ismodule(obj)
+        ):
             yield Panel(
                 Pretty(obj, indent_guides=True, max_length=10, max_string=60),
                 border_style="inspect.value.border",

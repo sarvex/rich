@@ -88,7 +88,7 @@ def test_console_options_update():
 
 def test_init():
     console = Console(color_system=None)
-    assert console._color_system == None
+    assert console._color_system is None
     console = Console(color_system="standard")
     assert console._color_system == ColorSystem.STANDARD
     console = Console(color_system="auto")

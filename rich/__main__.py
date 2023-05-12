@@ -205,7 +205,8 @@ Supports much of the *markdown*, __syntax__!
 - Lists, and more...
     """
     table.add_row(
-        "Markdown", comparison("[cyan]" + markdown_example, Markdown(markdown_example))
+        "Markdown",
+        comparison(f"[cyan]{markdown_example}", Markdown(markdown_example)),
     )
 
     table.add_row(

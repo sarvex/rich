@@ -260,9 +260,9 @@ class Table(JupyterMixin):
     def _extra_width(self) -> int:
         """Get extra width to add to cell content."""
         width = 0
-        if self.box and self.show_edge:
-            width += 2
         if self.box:
+            if self.show_edge:
+                width += 2
             width += len(self.columns) - 1
         return width
 
@@ -284,9 +284,7 @@ class Table(JupyterMixin):
     def __rich_measure__(
         self, console: "Console", options: "ConsoleOptions"
     ) -> Measurement:
-        max_width = options.max_width
-        if self.width is not None:
-            max_width = self.width
+        max_width = self.width if self.width is not None else options.max_width
         if max_width < 0:
             return Measurement(0, 0)
 
@@ -642,9 +640,8 @@ class Table(JupyterMixin):
     def _get_padding_width(self, column_index: int) -> int:
         """Get extra width from padding."""
         _, pad_right, _, pad_left = self.padding
-        if self.collapse_padding:
-            if column_index > 0:
-                pad_left = max(0, pad_left - pad_right)
+        if self.collapse_padding and column_index > 0:
+            pad_left = max(0, pad_left - pad_right)
         return pad_left + pad_right
 
     def _measure_column(
@@ -678,7 +675,7 @@ class Table(JupyterMixin):
             append_max(_max)
 
         measurement = Measurement(
-            max(min_widths) if min_widths else 1,
+            max(min_widths, default=1),
             max(max_widths) if max_widths else max_width,
         ).with_maximum(max_width)
         measurement = measurement.clamp(

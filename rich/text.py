@@ -93,9 +93,7 @@ class Span(NamedTuple):
             Span: A new (possibly smaller) span.
         """
         start, end, style = self
-        if offset >= end:
-            return self
-        return Span(start, min(offset, end), style)
+        return self if offset >= end else Span(start, min(offset, end), style)
 
 
 class Text(JupyterMixin):
@@ -193,15 +191,14 @@ class Text(JupyterMixin):
 
         if isinstance(slice, int):
             return get_text_at(slice)
+        start, stop, step = slice.indices(len(self.plain))
+        if step == 1:
+            lines = self.divide([start, stop])
+            return lines[1]
         else:
-            start, stop, step = slice.indices(len(self.plain))
-            if step == 1:
-                lines = self.divide([start, stop])
-                return lines[1]
-            else:
-                # This would be a bit of work to implement efficiently
-                # For now, its not required
-                raise TypeError("slices with step!=1 are not supported")
+            # This would be a bit of work to implement efficiently
+            # For now, its not required
+            raise TypeError("slices with step!=1 are not supported")
 
     @property
     def cell_len(self) -> int:
@@ -331,7 +328,7 @@ class Text(JupyterMixin):
 
     def blank_copy(self, plain: str = "") -> "Text":
         """Return a new Text instance with copied meta data (but not the string or spans)."""
-        copy_self = Text(
+        return Text(
             plain,
             style=self.style,
             justify=self.justify,
@@ -340,7 +337,6 @@ class Text(JupyterMixin):
             end=self.end,
             tab_size=self.tab_size,
         )
-        return copy_self
 
     def copy(self) -> "Text":
         """Return a copy of this instance."""
@@ -662,11 +658,10 @@ class Text(JupyterMixin):
             parts = line.split("\t", include_separator=True)
             for part in parts:
                 if part.plain.endswith("\t"):
-                    part._text = [part.plain[:-1] + " "]
+                    part._text = [f"{part.plain[:-1]} "]
                     append(part)
                     pos += len(part)
-                    spaces = tab_size - ((pos - 1) % tab_size) - 1
-                    if spaces:
+                    if spaces := tab_size - ((pos - 1) % tab_size) - 1:
                         append(" " * spaces, _style)
                         pos += spaces
                 else:
@@ -694,7 +689,7 @@ class Text(JupyterMixin):
             length = cell_len(self.plain)
             if length > max_width:
                 if _overflow == "ellipsis":
-                    self.plain = set_cell_size(self.plain, max_width - 1) + "…"
+                    self.plain = f"{set_cell_size(self.plain, max_width - 1)}…"
                 else:
                     self.plain = set_cell_size(self.plain, max_width)
             if pad and length < max_width:
@@ -768,8 +763,7 @@ class Text(JupyterMixin):
             character (str, optional): Character to pad with. Defaults to " ".
         """
         self.truncate(width)
-        excess_space = width - cell_len(self.plain)
-        if excess_space:
+        if excess_space := width - cell_len(self.plain):
             if align == "left":
                 self.pad_right(excess_space, character)
             elif align == "center":
@@ -799,9 +793,9 @@ class Text(JupyterMixin):
             if isinstance(text, str):
                 text = strip_control_codes(text)
                 self._text.append(text)
-                offset = len(self)
                 text_length = len(text)
                 if style is not None:
+                    offset = len(self)
                     self._spans.append(Span(offset, offset + text_length, style))
                 self._length += text_length
             elif isinstance(text, Text):
@@ -1114,10 +1108,10 @@ class Text(JupyterMixin):
         blank_lines = 0
         for line in text.split(allow_blank=True):
             match = re_indent.match(line.plain)
-            if not match or not match.group(2):
+            if not match or not match[2]:
                 blank_lines += 1
                 continue
-            indent = match.group(1)
+            indent = match[1]
             full_indents, remaining_space = divmod(len(indent), _indent_size)
             new_indent = f"{indent_line * full_indents}{' ' * remaining_space}"
             line.plain = new_indent + line.plain[len(new_indent) :]
@@ -1129,8 +1123,7 @@ class Text(JupyterMixin):
         if blank_lines:
             new_lines.extend([Text("", style=style)] * blank_lines)
 
-        new_text = text.blank_copy("\n").join(new_lines)
-        return new_text
+        return text.blank_copy("\n").join(new_lines)
 
 
 if __name__ == "__main__":  # pragma: no cover

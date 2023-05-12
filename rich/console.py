@@ -708,8 +708,7 @@ class Console:
     def file(self) -> IO[str]:
         """Get the file object to write to."""
         file = self._file or (sys.stderr if self.stderr else sys.stdout)
-        file = getattr(file, "rich_proxied_file", file)
-        return file
+        return getattr(file, "rich_proxied_file", file)
 
     @file.setter
     def file(self, new_file: IO[str]) -> None:
@@ -756,8 +755,7 @@ class Console:
                 return ColorSystem.TRUECOLOR
             term = self._environ.get("TERM", "").strip().lower()
             _term_name, _hyphen, colors = term.partition("-")
-            color_system = _TERM_COLORS.get(colors, ColorSystem.STANDARD)
-            return color_system
+            return _TERM_COLORS.get(colors, ColorSystem.STANDARD)
 
     def _enter_buffer(self) -> None:
         """Enter in to a buffer context, and buffer all output."""
@@ -1010,8 +1008,7 @@ class Console:
         Returns:
             Capture: Context manager with disables writing to the terminal.
         """
-        capture = Capture(self)
-        return capture
+        return Capture(self)
 
     def pager(
         self, pager: Optional[Pager] = None, styles: bool = False, links: bool = False
@@ -1081,7 +1078,7 @@ class Console:
         """
         from .status import Status
 
-        status_renderable = Status(
+        return Status(
             status,
             console=self,
             spinner=spinner,
@@ -1089,7 +1086,6 @@ class Console:
             speed=speed,
             refresh_per_second=refresh_per_second,
         )
-        return status_renderable
 
     def show_cursor(self, show: bool = True) -> bool:
         """Show or hide the cursor.
@@ -1160,8 +1156,7 @@ class Console:
         Returns:
             Measurement: A measurement of the renderable.
         """
-        measurement = Measurement.get(self, options or self.options, renderable)
-        return measurement
+        return Measurement.get(self, options or self.options, renderable)
 
     def render(
         self, renderable: RenderableType, options: Optional[ConsoleOptions] = None
@@ -1792,23 +1787,21 @@ class Console:
                     from .jupyter import display
 
                     display(self._buffer, self._render_buffer(self._buffer[:]))
-                    del self._buffer[:]
-                else:
-                    text = self._render_buffer(self._buffer[:])
-                    del self._buffer[:]
-                    if text:
-                        try:
-                            if WINDOWS:  # pragma: no cover
-                                # https://bugs.python.org/issue37871
-                                write = self.file.write
-                                for line in text.splitlines(True):
-                                    write(line)
-                            else:
-                                self.file.write(text)
-                            self.file.flush()
-                        except UnicodeEncodeError as error:
-                            error.reason = f"{error.reason}\n*** You may need to add PYTHONIOENCODING=utf-8 to your environment ***"
-                            raise
+                elif text := self._render_buffer(self._buffer[:]):
+                    try:
+                        if WINDOWS:  # pragma: no cover
+                            # https://bugs.python.org/issue37871
+                            write = self.file.write
+                            for line in text.splitlines(True):
+                                write(line)
+                        else:
+                            self.file.write(text)
+                        self.file.flush()
+                    except UnicodeEncodeError as error:
+                        error.reason = f"{error.reason}\n*** You may need to add PYTHONIOENCODING=utf-8 to your environment ***"
+                        raise
+
+                del self._buffer[:]
 
     def _render_buffer(self, buffer: Iterable[Segment]) -> str:
         """Render buffered output, and clear buffer."""
@@ -1834,8 +1827,7 @@ class Console:
             elif not (not_terminal and control):
                 append(text)
 
-        rendered = "".join(output)
-        return rendered
+        return "".join(output)
 
     def input(
         self,
@@ -1868,14 +1860,12 @@ class Console:
             self.file.write(prompt_str)
             prompt_str = ""
         if password:
-            result = getpass(prompt_str, stream=stream)
+            return getpass(prompt_str, stream=stream)
+        elif stream:
+            self.file.write(prompt_str)
+            return stream.readline()
         else:
-            if stream:
-                self.file.write(prompt_str)
-                result = stream.readline()
-            else:
-                result = input(prompt_str)
-        return result
+            return input(prompt_str)
 
     def export_text(self, *, clear: bool = True, styles: bool = False) -> str:
         """Generate text from console contents (requires record=True argument in constructor).

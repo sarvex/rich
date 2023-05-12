@@ -37,10 +37,7 @@ def get_character_cell_size(character: str) -> int:
     """
 
     codepoint = ord(character)
-    if 127 > codepoint > 31:
-        # Shortcut for ascii
-        return 1
-    return _get_codepoint_cell_size(codepoint)
+    return 1 if 127 > codepoint > 31 else _get_codepoint_cell_size(codepoint)
 
 
 @lru_cache(maxsize=4096)

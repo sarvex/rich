@@ -251,12 +251,11 @@ class SpinnerColumn(ProgressColumn):
         self.spinner = Spinner(spinner_name, style=spinner_style, speed=speed)
 
     def render(self, task: "Task") -> RenderableType:
-        text = (
+        return (
             self.finished_text
             if task.finished
             else self.spinner.render(task.get_time())
         )
-        return text
 
 
 class TextColumn(ProgressColumn):
@@ -409,8 +408,7 @@ class DownloadColumn(ProgressColumn):
         completed_str = f"{completed_ratio:,.{precision}f}"
         total_str = f"{total_ratio:,.{precision}f}"
         download_status = f"{completed_str}/{total_str} {suffix}"
-        download_text = Text(download_status, style="progress.download")
-        return download_text
+        return Text(download_status, style="progress.download")
 
 
 class TransferSpeedColumn(ProgressColumn):
@@ -516,8 +514,7 @@ class Task:
         if not self.total:
             return 0.0
         completed = (self.completed / self.total) * 100.0
-        completed = min(100.0, max(0.0, completed))
-        return completed
+        return min(100.0, max(0.0, completed))
 
     @property
     def speed(self) -> Optional[float]:
@@ -534,8 +531,7 @@ class Task:
             iter_progress = iter(progress)
             next(iter_progress)
             total_completed = sum(sample.completed for sample in iter_progress)
-            speed = total_completed / total_time
-            return speed
+            return total_completed / total_time
 
     @property
     def time_remaining(self) -> Optional[float]:
@@ -543,10 +539,7 @@ class Task:
         if self.finished:
             return 0.0
         speed = self.speed
-        if not speed:
-            return None
-        estimate = ceil(self.remaining / speed)
-        return estimate
+        return None if not speed else ceil(self.remaining / speed)
 
     def _reset(self) -> None:
         """Reset progress."""
@@ -866,13 +859,11 @@ class Progress(JupyterMixin):
 
     def get_renderable(self) -> RenderableType:
         """Get a renderable for the progress display."""
-        renderable = RenderGroup(*self.get_renderables())
-        return renderable
+        return RenderGroup(*self.get_renderables())
 
     def get_renderables(self) -> Iterable[RenderableType]:
         """Get a number of renderables for the progress display."""
-        table = self.make_tasks_table(self.tasks)
-        yield table
+        yield self.make_tasks_table(self.tasks)
 
     def make_tasks_table(self, tasks: Iterable[Task]) -> Table:
         """Get a table to render the Progress display.
